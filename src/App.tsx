@@ -1,5 +1,5 @@
 // src/App.tsx (example)
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProductProvider } from './context/ProductContext';
@@ -7,10 +7,11 @@ import { CategoryProvider } from './context/CategoryContext';
 
 import LoginPage from './pages/LoginPage';
 import Layout from './components/Layout/Layout';
-import Dashboard from './pages/Dashboard';
-import ProductsPage from './pages/ProductsPage';
-import CategoriesPage from './pages/CategoriesPage';
 import ProtectedRoute from './components/ProtectedRoute';
+
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const CategoriesPage = React.lazy(() => import('./pages/CategoriesPage'));
+const ProductsPage = React.lazy(() => import('./pages/ProductsPage'));
 
 export default function App() {
   return (
@@ -20,10 +21,14 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<Dashboard />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="products" element={<ProductsPage />} />
-              <Route path="categories" element={<CategoriesPage />} />
+              <Route index element={
+                <Suspense fallback={<p>Loading...</p>}>
+                  <Dashboard />
+                </Suspense>
+              } />
+              <Route path="dashboard" element={<Suspense fallback={<p>Loading...</p>}><Dashboard /></Suspense>} />
+              <Route path="products" element={<Suspense fallback={<p>Loading...</p>}><ProductsPage /></Suspense>} />
+              <Route path="categories" element={<Suspense fallback={<p>Loading...</p>}><CategoriesPage /></Suspense>} />
             </Route>
           </Routes>
         </CategoryProvider>
