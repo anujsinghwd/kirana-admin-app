@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, NavLink } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -23,6 +23,7 @@ const Navbar = () => {
         <Link to="/dashboard" className="hover:text-blue-600 font-medium">Dashboard</Link>
         <Link to="/products" className="hover:text-blue-600 font-medium">Products</Link>
         <Link to="/categories" className="hover:text-blue-600 font-medium">Categories</Link>
+        <Link to="/sub-categories" className="hover:text-blue-600 font-medium">Sub Categories</Link>
         <span className="text-gray-500 text-sm">Hi, {user?.name || 'Admin'}</span>
         <button
           onClick={handleLogout}
@@ -40,27 +41,43 @@ const Navbar = () => {
       {/* Mobile Menu Drawer */}
       {isOpen && (
         <div className="absolute top-13 left-0 w-full bg-white border-t shadow-md flex flex-col md:hidden z-50 p-4 space-y-3">
-          <Link
+          <NavLink
             to="/dashboard"
-            className="p-2 border-b border-gray-100 hover:bg-gray-50 rounded"
+            className={({ isActive }) =>
+              `p-2 rounded hover:bg-gray-100 ${isActive ? 'bg-gray-100 font-semibold' : ''}`
+            }
             onClick={() => setIsOpen(false)}
           >
             Dashboard
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/products"
-            className="p-2 border-b border-gray-100 hover:bg-gray-50 rounded"
+            className={({ isActive }) =>
+              `p-2 rounded hover:bg-gray-100 ${isActive ? 'bg-gray-100 font-semibold' : ''}`
+            }
             onClick={() => setIsOpen(false)}
           >
             Products
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/categories"
-            className="p-2 border-b border-gray-100 hover:bg-gray-50 rounded"
+            className={({ isActive }) =>
+              `p-2 rounded hover:bg-gray-100 ${isActive ? 'bg-gray-100 font-semibold' : ''}`
+            }
             onClick={() => setIsOpen(false)}
           >
             Categories
-          </Link>
+          </NavLink>
+
+          <NavLink
+            to="/sub-categories"
+            className={({ isActive }) =>
+              `p-2 rounded hover:bg-gray-100 ${isActive ? 'bg-gray-100 font-semibold' : ''}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            Sub Categories
+          </NavLink>
 
           <div className="flex justify-between items-center pt-3 border-t border-gray-100">
             <span className="text-gray-600 text-sm">Hi, {user?.name || 'Admin'}</span>

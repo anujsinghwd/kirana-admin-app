@@ -1,56 +1,68 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from "react";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { useSubCategories } from "../context/SubCategoryContext";
+import { useCategories } from "../context/CategoryContext";
+import NoData from "../components/common/NoData";
+import Loading from "../components/common/Loading";
 
-import { useCategories } from '../context/CategoryContext'
-import NoData from '../components/common/NoData'
-import Loading from '../components/common/Loading'
+const SubCategoriesPage = () => {
+  const {
+    loadingConfig,
+    subCategories,
+    fetchSubCategories,
+    createSubCategory,
+    updateSubCategory,
+    deleteSubCategory,
+    deleteSubCategoryImage,
+  } = useSubCategories();
 
-const CategoriesPage = () => {
-  const { loadingConfig, categories, fetchCategories, createCategory, updateCategory, deleteCategory, deleteCategoryImage } = useCategories()
-  const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState<any>(null)
-  const [name, setName] = useState('')
-  const [desc, setDesc] = useState('')
-  const [image, setImage] = useState<string | null>(null)
+  const { categories, fetchCategories } = useCategories();
+
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [name, setName] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [image, setImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
-    fetchCategories().catch(console.error)
-  }, [])
+    fetchSubCategories().catch(console.error);
+    fetchCategories().catch(console.error);
+  }, []);
 
   const openCreate = () => {
-    resetState()
-    setShowForm(true)
-  }
+    resetState();
+    setShowForm(true);
+  };
 
   const resetState = () => {
-    setEditing(null)
-    setName('')
-    setDesc('')
-    setFile(null);
+    setEditing(null);
+    setName("");
+    setSelectedCategories([]);
     setImage(null);
-  }
+    setFile(null);
+  };
 
-  const openEdit = (c: any) => {
-    setEditing(c)
-    setName(c.name)
-    setDesc(c.description || '')
-    setImage(c?.image || '')
-    setShowForm(true)
-  }
+  const openEdit = (sc: any) => {
+    setEditing(sc);
+    setName(sc.name);
+    setSelectedCategories(sc.category.map((c: any) => c._id));
+    setImage(sc.image || null);
+    setShowForm(true);
+  };
 
   const handleSubmit = async (data: FormData) => {
     try {
-      if (editing) await updateCategory(editing._id, data);
-      else await createCategory(data);
-      setShowForm(false)
+      if (editing) await updateSubCategory(editing._id, data);
+      else await createSubCategory(data);
+      setShowForm(false);
       resetState();
     } catch (err: any) {
       resetState();
-      alert(err.response?.data?.message || err.message)
+      alert(err.response?.data?.message || err.message);
     }
-  }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -62,25 +74,30 @@ const CategoriesPage = () => {
     }
   };
 
+  const handleCategorySelection = (id: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((cid) => cid !== id) : [...prev, id]
+    );
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Create form data if image needs to be uploaded
     const formData = new FormData();
     formData.append("name", name);
-    formData.append("description", desc);
+    selectedCategories.forEach((id) => formData.append("category", id));
     if (file) formData.append("image", file);
+
     handleSubmit(formData);
-  }
+  };
 
   const handleRemoveImage = async () => {
     if (editing?._id && editing?.image) {
       const toRemoveImage = {
         id: editing._id,
-        image: editing.image
-      }
-
-      await deleteCategoryImage(toRemoveImage);
+        image: editing.image,
+      };
+      await deleteSubCategoryImage(toRemoveImage);
     }
     setImage(null);
     setFile(null);
@@ -89,39 +106,48 @@ const CategoriesPage = () => {
   const handleCancelClick = () => {
     setShowForm(false);
     resetState();
-  }
+  };
 
   return (
     <div className="p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Categories</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          Subcategories
+        </h1>
         <button
           onClick={openCreate}
           className="w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all"
         >
-          Add Category
+          Add Subcategory
         </button>
       </div>
 
-      {loadingConfig.loading && (<Loading size={40} color="fill-blue-500" fullscreen={true} text={loadingConfig.text} />)}
+      {loadingConfig.loading && (
+        <Loading
+          size={40}
+          color="fill-blue-500"
+          fullscreen={true}
+          text={loadingConfig.text}
+        />
+      )}
 
-      {/* Category Cards */}
-      {categories.length === 0 ? (
+      {/* SubCategory Cards */}
+      {subCategories.length === 0 ? (
         <NoData />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((c) => (
+          {subCategories.map((sc) => (
             <div
-              key={c._id}
+              key={sc._id}
               className="flex items-center gap-4 bg-white border border-gray-100 rounded-xl shadow-sm p-4 hover:shadow-md transition-all"
             >
               {/* Image Section */}
               <div className="flex-shrink-0">
-                {c?.image ? (
+                {sc?.image ? (
                   <img
-                    src={c.image}
-                    alt={c.name}
+                    src={sc.image}
+                    alt={sc.name}
                     className="w-30 h-30 object-scale-down rounded-lg border border-gray-200"
                   />
                 ) : (
@@ -133,19 +159,32 @@ const CategoriesPage = () => {
 
               {/* Info Section */}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 text-base truncate">{c.name}</div>
-                <div className="text-sm text-gray-500 mt-1 line-clamp-2">{c.description}</div>
+                <div className="font-semibold text-gray-900 text-base truncate">
+                  {sc.name}
+                </div>
+
+                {/* Categories */}
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {sc.category.map((c) => (
+                    <span
+                      key={c._id}
+                      className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md shadow-sm"
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
 
                 {/* Buttons */}
                 <div className="flex gap-2 mt-3">
                   <button
-                    onClick={() => openEdit(c)}
+                    onClick={() => openEdit(sc)}
                     className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => deleteCategory(c._id)}
+                    onClick={() => deleteSubCategory(sc._id)}
                     className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                   >
                     Delete
@@ -153,38 +192,55 @@ const CategoriesPage = () => {
                 </div>
               </div>
             </div>
-
           ))}
         </div>
       )}
 
       {/* Modal Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[99]">
           <form
             onSubmit={onSubmit}
             className="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-[90%] max-w-md mx-auto"
           >
             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
-              {editing ? 'Edit Category' : 'Add Category'}
+              {editing ? "Edit Subcategory" : "Add Subcategory"}
             </h2>
 
             <div className="space-y-3">
+              {/* Name */}
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
                 className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
               />
-              <textarea
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                placeholder="Description"
-                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-              />
+
+              {/* Category Selector */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  Select Category
+                </p>
+                <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto border border-gray-300 rounded p-2">
+                  {categories.map((cat) => (
+                    <label
+                      key={cat._id}
+                      className="flex items-center gap-1 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat._id)}
+                        onChange={() => handleCategorySelection(cat._id)}
+                      />
+                      {cat.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-4 mt-2">
+            {/* Image Upload */}
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-4 mt-3">
               {image ? (
                 <div className="relative w-32 h-32">
                   <img
@@ -203,7 +259,9 @@ const CategoriesPage = () => {
               ) : (
                 <label className="flex flex-col items-center cursor-pointer">
                   <FaCloudUploadAlt className="text-3xl text-gray-500" />
-                  <span className="text-sm text-gray-500 mt-1">Upload Image</span>
+                  <span className="text-sm text-gray-500 mt-1">
+                    Upload Image
+                  </span>
                   <input
                     type="file"
                     accept="image/*"
@@ -214,7 +272,7 @@ const CategoriesPage = () => {
               )}
             </div>
 
-
+            {/* Buttons */}
             <div className="flex justify-end gap-2 mt-5">
               <button
                 type="button"
@@ -234,7 +292,7 @@ const CategoriesPage = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default CategoriesPage
+export default SubCategoriesPage;

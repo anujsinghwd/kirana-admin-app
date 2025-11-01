@@ -1,20 +1,26 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { api } from '../api/api'
+import { LoadingConfig } from './CategoryContext';
 
 export interface Product {
-  _id: string
-  name: string
-  description?: string
-  price: number
-  category: string | any
-  images?: string[]
-  stock?: number
-  sku?: string
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category: string | any;
+  subcategory: string | any;
+  images?: string[];
+  stock?: number;
+  sku?: string;
+  unit?: string;
+  discount?: number;
+  offerPrice?: number;
 }
 
 type ProductContextType = {
   products: Product[]
   uploadProgress: number
+  loadingConfig: LoadingConfig
   fetchProducts: () => Promise<void>
   createProduct: (payload: FormData | Partial<Product>) => Promise<void>
   updateProduct: (id: string, payload: FormData | Partial<Product>) => Promise<void>
@@ -32,20 +38,24 @@ export const useProducts = () => {
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([])
   const [uploadProgress, setUploadProgress] = useState<number>(0)
+  const [loadingConfig, setLoadingConfig] = useState<LoadingConfig>({loading: false, text: ''})
 
   const fetchProducts = async () => {
+    setLoadingConfig({...loadingConfig, loading: true, text: 'Getting Products...'});
     try {
       const res = await api.get('/products')
       setProducts(res.data)
     } catch (err: any) {
       console.error('Error fetching products:', err.message)
     }
+    setLoadingConfig({...loadingConfig, loading: false, text: ''});
   }
 
   /**
    * 🔹 Create Product with upload progress tracking
    */
   const createProduct = async (payload: FormData | Partial<Product>) => {
+    setLoadingConfig({...loadingConfig, loading: true, text: 'Adding Product...Please wait'});
     try {
       const headers =
         payload instanceof FormData
@@ -70,12 +80,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       setUploadProgress(0)
       throw err
     }
+    setLoadingConfig({...loadingConfig, loading: false, text: ''});
   }
 
   /**
    * 🔹 Update Product with progress
    */
   const updateProduct = async (id: string, payload: FormData | Partial<Product>) => {
+    setLoadingConfig({...loadingConfig, loading: true, text: 'Update Product...Please wait'});
     try {
       const headers =
         payload instanceof FormData
@@ -100,9 +112,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       setUploadProgress(0)
       throw err
     }
+    setLoadingConfig({...loadingConfig, loading: false, text: ''});
   }
 
   const deleteProduct = async (id: string) => {
+    setLoadingConfig({...loadingConfig, loading: true, text: 'Removing Product...Please wait'});
     try {
       await api.delete(`/products/${id}`)
       await fetchProducts()
@@ -110,11 +124,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error deleting product:', err.message)
       throw err
     }
+    setLoadingConfig({...loadingConfig, loading: false, text: ''});
   }
 
   return (
     <ProductContext.Provider
       value={{
+        loadingConfig,
         products,
         uploadProgress,
         fetchProducts,

@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useProducts } from '../context/ProductContext';
 import { useCategories } from '../context/CategoryContext';
 import ProductForm from '../components/products/ProductForm';
 import ProductCard from '../components/products/ProductCard';
+import ProductCardAdmin from '../components/products/Card';
+import NoData from '../components/common/NoData';
+import Loading from '../components/common/Loading';
 
 const ProductsPage = () => {
-  const { products, fetchProducts, createProduct, updateProduct, deleteProduct } = useProducts()
+  const { loadingConfig, products, fetchProducts, createProduct, updateProduct, deleteProduct } = useProducts()
   const { categories, fetchCategories } = useCategories()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<any>(null)
@@ -31,17 +34,17 @@ const ProductsPage = () => {
   }
 
   const handleSubmit = async (formData: FormData) => {
-  try {
-    if (editing) {
-      await updateProduct(editing._id, formData);
-    } else {
-      await createProduct(formData)
+    try {
+      if (editing) {
+        await updateProduct(editing._id, formData);
+      } else {
+        await createProduct(formData)
+      }
+      setShowForm(false)
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message)
     }
-    setShowForm(false)
-  } catch (err: any) {
-    alert(err.response?.data?.message || err.message)
   }
-}
 
   return (
     <div className="p-4 md:p-6">
@@ -55,10 +58,10 @@ const ProductsPage = () => {
           Add Product
         </button>
       </div>
-
+      {loadingConfig.loading && (<Loading fullscreen={true} color="fill-blue-500" text={loadingConfig.text} />)}
       {/* Product Cards */}
       {products.length === 0 ? (
-        <div className="text-center text-gray-500 mt-8">No products available.</div>
+        <NoData />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((p) => (

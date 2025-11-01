@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Product } from '../../context/ProductContext'
 import { useProducts } from '../../context/ProductContext'
+import { useSubCategories } from "../../context/SubCategoryContext";
+import { appendIfExists } from '../../utils/utils'
 
 interface Category {
   _id: string
@@ -21,8 +23,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   categories = []
 }) => {
+
+  const { fetchSubCategoriesByCategory, subCategories } = useSubCategories();
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+
   const { uploadProgress } = useProducts()
-  const empty = { name: '', description: '', price: 0, category: '', stock: 0, sku: '' }
+  const empty = { name: '', description: '', price: 0, category: '', stock: 0, sku: '', subcategory: '' }
   const [form, setForm] = useState<any>(empty)
   const [newImages, setNewImages] = useState<FileList | null>(null)
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
@@ -39,7 +45,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
         price: initialData.price,
         category: initialData.category?._id || initialData.category || '',
         stock: initialData.stock || 0,
-        sku: initialData.sku || ''
+        sku: initialData.sku || '',
+        unit: initialData.unit || 0,
+        offerPrice: initialData.offerPrice || 0,
+        discount: initialData.discount || 0
       })
       setExistingImages(initialData.images || [])
     } else {
@@ -47,6 +56,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
       setExistingImages([])
     }
   }, [initialData])
+
+  // ✅ Fetch subcategories whenever category changes
+  useEffect(() => {
+    if (form.category) {
+      fetchSubCategoriesByCategory(form.category).catch(console.error);
+    }
+  }, [form.category]);
 
   // ✅ Handle new file uploads
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,17 +102,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     const formData = new FormData()
     formData.append('name', form.name)
-    formData.append('description', form.description)
     formData.append('price', String(form.price))
     formData.append('category', form.category)
-    formData.append('stock', String(form.stock))
-    formData.append('sku', form.sku)
+    formData.append('subcategory', form.subcategory)
+
+    appendIfExists(formData, 'description', form.description)
+    appendIfExists(formData, 'stock', form.stock)
+    appendIfExists(formData, 'unit', form.unit)
+    appendIfExists(formData, 'offerPrice', form.offerPrice)
+    appendIfExists(formData, 'sku', form.sku)
+    appendIfExists(formData, 'discount', form.discount)
 
     if (newImages) Array.from(newImages).forEach(img => formData.append('images', img))
 
     if (deletedImages.length > 0)
       formData.append('deletedImages', JSON.stringify(deletedImages))
-
+    // console.log(formData);return;
     try {
       await onSubmit(formData)
     } finally {
@@ -108,58 +129,103 @@ const ProductForm: React.FC<ProductFormProps> = ({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-[90%] max-w-md mx-auto"
+        className="
+      bg-white 
+      w-full 
+      h-full 
+      sm:max-w-md sm:h-auto 
+      rounded-none sm:rounded-lg 
+      shadow-lg 
+      flex flex-col
+      overflow-hidden
+      sm:mx-auto
+      sm:relative
+      sm:p-0
+      transition-all duration-300
+    "
       >
-        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
-          {initialData ? 'Edit Product' : 'Add Product'}
-        </h2>
+        {/* ✅ Header */}
+        <header className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+            {initialData ? 'Edit Product' : 'Add Product'}
+          </h2>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-gray-500 hover:text-gray-700 sm:hidden"
+          >
+            ✕
+          </button>
+        </header>
 
-        <div className="space-y-3">
+        {/* ✅ Scrollable Form Body */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3">
           {/* Name */}
-          <input
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            placeholder="Name"
-            className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-          />
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name
+            </label>
+            <input
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              placeholder="Name"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
           {/* Description */}
-          <textarea
-            value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-            placeholder="Description"
-            className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-          />
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              value={form.description}
+              onChange={e => setForm({ ...form, description: e.target.value })}
+              placeholder="Description"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
           {/* Price */}
-          <input
-            value={form.price}
-            onChange={e => setForm({ ...form, price: +e.target.value })}
-            type="number"
-            placeholder="Price"
-            className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+            <input
+              value={form.price}
+              onChange={e => setForm({ ...form, price: +e.target.value })}
+              type="number"
+              placeholder="Price"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          {/* ✅ Category Selector */}
+          {/* Category Dropdown */}
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
-
             <button
               type="button"
-              onClick={() => setForm({ ...form, showDropdown: !form.showDropdown })}
+              onClick={() =>
+                setForm({ ...form, showDropdown: !form.showDropdown })
+              }
               className="w-full text-left border border-gray-300 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500"
             >
               {categories.find(c => c._id === form.category)?.name || 'Select category'}
             </button>
+
             {form.showDropdown && (
               <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded shadow mt-1 max-h-40 overflow-auto z-50">
                 {categories.map((c: any) => (
                   <li
                     key={c._id}
                     className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() => setForm({ ...form, category: c._id, showDropdown: false })}
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        category: c._id,
+                        showDropdown: false,
+                      })
+                    }
                   >
                     {c.name}
                   </li>
@@ -167,6 +233,47 @@ const ProductForm: React.FC<ProductFormProps> = ({
               </ul>
             )}
           </div>
+
+          {/* Subcategory Dropdown */}
+          {subCategories.length > 0 && (
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Subcategory
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({ ...form, showSubDropdown: !form.showSubDropdown })
+                }
+                className="w-full text-left border border-gray-300 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500"
+              >
+                {subCategories.find((s) => s._id === selectedSubCategory)?.name ||
+                  "Select subcategory"}
+              </button>
+
+              {form.showSubDropdown && (
+                <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded shadow mt-1 max-h-40 overflow-auto z-50">
+                  {subCategories.map((s) => (
+                    <li
+                      key={s._id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      onClick={() => {
+                        setSelectedSubCategory(s._id);
+                        setForm({
+                          ...form,
+                          subcategory: s._id,
+                          showSubDropdown: false,
+                        });
+                      }}
+                    >
+                      {s.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
 
           {/* Existing Images */}
           {existingImages.length > 0 && (
@@ -195,7 +302,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </div>
           )}
 
-          {/* New Uploads */}
+          {/* File Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Upload New Images (Max 3)
@@ -230,34 +337,76 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </div>
 
           {/* Stock */}
-          <input
-            value={form.stock}
-            onChange={e => setForm({ ...form, stock: +e.target.value })}
-            type="number"
-            placeholder="Stock"
-            className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-          />
-
-          {/* SKU */}
-          <input
-            value={form.sku}
-            onChange={e => setForm({ ...form, sku: e.target.value })}
-            placeholder="SKU"
-            className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Upload Progress Bar */}
-        {uploadProgress > 0 && (
-          <div className="w-full mt-3 bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-blue-600 h-2 transition-all duration-300"
-              style={{ width: `${uploadProgress}%` }}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Stock
+            </label>
+            <input
+              value={form.stock}
+              onChange={e => setForm({ ...form, stock: +e.target.value })}
+              type="text"
+              placeholder="Stock"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        )}
 
-        <div className="flex justify-end gap-2 mt-5">
+          {/* Offer Price */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Offer Price
+            </label>
+            <input
+              value={form.offerPrice}
+              onChange={e => setForm({ ...form, offerPrice: e.target.value })}
+              name='offerPrice'
+              placeholder="Offer Price"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Discount */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Discount
+            </label>
+            <input
+              value={form.discount}
+              onChange={e => setForm({ ...form, discount: e.target.value })}
+              placeholder="Discount"
+              name='discount'
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* SKU */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Unit
+            </label>
+            <input
+              value={form.unit}
+              onChange={e => setForm({ ...form, unit: e.target.value })}
+              placeholder="Unit"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* SKU */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              SKU
+            </label>
+            <input
+              value={form.sku}
+              onChange={e => setForm({ ...form, sku: e.target.value })}
+              placeholder="SKU"
+              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* ✅ Footer */}
+        <footer className="sticky bottom-0 bg-white border-t border-gray-200 p-3 flex justify-end gap-2 z-10">
           <button
             type="button"
             onClick={onCancel}
@@ -272,9 +421,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
           >
             {loading ? 'Saving...' : 'Save'}
           </button>
-        </div>
+        </footer>
       </form>
     </div>
+
   )
 }
 
