@@ -58,7 +58,7 @@ const ProductsPage = () => {
           Add Product
         </button>
       </div>
-      {loadingConfig.loading && (<Loading fullscreen={true} color="fill-blue-500" text={loadingConfig.text} />)}
+      {loadingConfig.loading && (<Loading size={40} fullscreen={true} color="fill-blue-500" text={loadingConfig.text} />)}
       {/* Product Cards */}
       {products.length === 0 ? (
         <NoData />

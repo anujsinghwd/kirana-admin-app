@@ -7,6 +7,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white p-4 rounded shadow">Total Products: --</div>
                 <div className="bg-white p-4 rounded shadow">Total Categories: --</div>
+                <div className="bg-white p-4 rounded shadow">Total Sub Categories: --</div>
                 <div className="bg-white p-4 rounded shadow">Pending Orders: --</div>
             </div>
         </div>

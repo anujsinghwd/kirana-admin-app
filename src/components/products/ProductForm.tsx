@@ -132,19 +132,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
         className="
       bg-white 
       w-full 
-      h-full 
-      sm:max-w-md sm:h-auto 
-      rounded-none sm:rounded-lg 
+      h-screen                 /* full viewport height on small screens */
+      md:h-[90vh]              /* slightly smaller than viewport on desktop */
+      md:max-w-3xl 
+      md:rounded-lg 
       shadow-lg 
       flex flex-col
       overflow-hidden
-      sm:mx-auto
-      sm:relative
-      sm:p-0
+      md:mx-auto
       transition-all duration-300
     "
+        style={{ maxHeight: '100vh' }} /* extra safety */
       >
-        {/* ✅ Header */}
+        {/* Header (sticky) */}
         <header className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
             {initialData ? 'Edit Product' : 'Add Product'}
@@ -152,107 +152,120 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="text-gray-500 hover:text-gray-700 sm:hidden"
+            className="text-gray-500 hover:text-gray-700 md:hidden"
           >
             ✕
           </button>
         </header>
 
-        {/* ✅ Scrollable Form Body */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3">
-          {/* Name */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Name
-            </label>
-            <input
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              placeholder="Name"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* Body: scrollable */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4">
+          {/* Grid: 1 column mobile, 2 columns desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              value={form.description}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-              placeholder="Description"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Name (col 1) */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Name
+              </label>
+              <input
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                placeholder="Name"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* Price */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-            <input
-              value={form.price}
-              onChange={e => setForm({ ...form, price: +e.target.value })}
-              type="number"
-              placeholder="Price"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Price (col 2) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+              <input
+                value={form.price}
+                onChange={e => setForm({ ...form, price: +e.target.value })}
+                type="number"
+                placeholder="Price"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* Category Dropdown */}
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <button
-              type="button"
-              onClick={() =>
-                setForm({ ...form, showDropdown: !form.showDropdown })
-              }
-              className="w-full text-left border border-gray-300 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500"
-            >
-              {categories.find(c => c._id === form.category)?.name || 'Select category'}
-            </button>
+            {/* Description (span 2) */}
+            <div className="md:col-span-2">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <textarea
+                value={form.description}
+                onChange={e => setForm({ ...form, description: e.target.value })}
+                placeholder="Description"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+                rows={4}
+              />
+            </div>
 
-            {form.showDropdown && (
-              <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded shadow mt-1 max-h-40 overflow-auto z-50">
-                {categories.map((c: any) => (
-                  <li
-                    key={c._id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        category: c._id,
-                        showDropdown: false,
-                      })
-                    }
-                  >
-                    {c.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+            {/* Category (col 1) */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
 
-          {/* Subcategory Dropdown */}
-          {subCategories.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, showDropdown: !form.showDropdown })}
+                className="w-full text-left border border-gray-300 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 relative"
+              >
+                {categories.find(c => c._id === form.category)?.name || 'Select category'}
+              </button>
+
+              {form.showDropdown && (
+                <ul
+                  className="
+        absolute left-0 w-full
+        bg-white border border-gray-200 rounded-md shadow-md
+        mt-1 max-h-48 overflow-auto z-50
+      "
+                >
+                  {categories.map((c: any) => (
+                    <li
+                      key={c._id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          category: c._id,
+                          showDropdown: false,
+                        })
+                      }
+                    >
+                      {c.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Subcategory (col 2) */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subcategory
               </label>
+
               <button
                 type="button"
-                onClick={() =>
-                  setForm({ ...form, showSubDropdown: !form.showSubDropdown })
-                }
-                className="w-full text-left border border-gray-300 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500"
+                onClick={() => setForm({ ...form, showSubDropdown: !form.showSubDropdown })}
+                className="w-full text-left border border-gray-300 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 relative"
               >
                 {subCategories.find((s) => s._id === selectedSubCategory)?.name ||
-                  "Select subcategory"}
+                  'Select subcategory'}
               </button>
 
               {form.showSubDropdown && (
-                <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded shadow mt-1 max-h-40 overflow-auto z-50">
+                <ul
+                  className="
+        absolute left-0 w-full
+        bg-white border border-gray-200 rounded-md shadow-md
+        mt-1 max-h-48 overflow-auto z-50
+      "
+                >
                   {subCategories.map((s) => (
                     <li
                       key={s._id}
@@ -272,140 +285,132 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 </ul>
               )}
             </div>
-          )}
 
 
-          {/* Existing Images */}
-          {existingImages.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Existing Images
-              </label>
-              <div className="flex gap-2">
-                {existingImages.map((url, i) => (
-                  <div key={i} className="relative">
-                    <img
-                      src={url}
-                      alt="existing"
-                      className="w-16 h-20 object-cover rounded border border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExistingImage(url)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs cursor-pointer"
-                    >
-                      ✕
-                    </button>
+            {/* Existing Images (span 2) */}
+            <div className="md:col-span-2">
+              {existingImages.length > 0 && (
+                <>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Existing Images
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {existingImages.map((url, i) => (
+                      <div key={i} className="relative">
+                        <img
+                          src={url}
+                          alt="existing"
+                          className="w-20 h-20 object-cover rounded border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(url)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </div>
-          )}
 
-          {/* File Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Upload New Images (Max 3)
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileChange}
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-            {previewUrls.length > 0 && (
-              <div className="flex gap-2 mt-3 overflow-x-auto">
-                {previewUrls.map((url, i) => (
-                  <div key={i} className="relative">
-                    <img
-                      src={url}
-                      alt="preview"
-                      className="w-16 h-16 object-cover rounded border border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeNewImage(i)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            {/* File Upload (span 2) */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Upload New Images (Max 3)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+              {previewUrls.length > 0 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto">
+                  {previewUrls.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img
+                        src={url}
+                        alt="preview"
+                        className="w-16 h-16 object-cover rounded border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeNewImage(i)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {/* Stock */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Stock
-            </label>
-            <input
-              value={form.stock}
-              onChange={e => setForm({ ...form, stock: +e.target.value })}
-              type="text"
-              placeholder="Stock"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Stock (col 1) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <input
+                value={form.stock}
+                onChange={e => setForm({ ...form, stock: +e.target.value })}
+                type="text"
+                placeholder="Stock"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* Offer Price */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Offer Price
-            </label>
-            <input
-              value={form.offerPrice}
-              onChange={e => setForm({ ...form, offerPrice: e.target.value })}
-              name='offerPrice'
-              placeholder="Offer Price"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Offer Price (col 2) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Offer Price</label>
+              <input
+                value={form.offerPrice}
+                onChange={e => setForm({ ...form, offerPrice: e.target.value })}
+                name="offerPrice"
+                placeholder="Offer Price"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* Discount */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Discount
-            </label>
-            <input
-              value={form.discount}
-              onChange={e => setForm({ ...form, discount: e.target.value })}
-              placeholder="Discount"
-              name='discount'
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Discount (col 1) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Discount</label>
+              <input
+                value={form.discount}
+                onChange={e => setForm({ ...form, discount: e.target.value })}
+                placeholder="Discount"
+                name="discount"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* SKU */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Unit
-            </label>
-            <input
-              value={form.unit}
-              onChange={e => setForm({ ...form, unit: e.target.value })}
-              placeholder="Unit"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Unit (col 2) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+              <input
+                value={form.unit}
+                onChange={e => setForm({ ...form, unit: e.target.value })}
+                placeholder="Unit"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          {/* SKU */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              SKU
-            </label>
-            <input
-              value={form.sku}
-              onChange={e => setForm({ ...form, sku: e.target.value })}
-              placeholder="SKU"
-              className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
+            {/* SKU (span 2) */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+              <input
+                value={form.sku}
+                onChange={e => setForm({ ...form, sku: e.target.value })}
+                placeholder="SKU"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
         </div>
 
-        {/* ✅ Footer */}
+        {/* Footer */}
         <footer className="sticky bottom-0 bg-white border-t border-gray-200 p-3 flex justify-end gap-2 z-10">
           <button
             type="button"
