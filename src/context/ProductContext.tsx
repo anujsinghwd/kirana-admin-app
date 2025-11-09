@@ -2,19 +2,36 @@ import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { api } from '../api/api'
 import { LoadingConfig } from './CategoryContext';
 
+export interface IShelfLife {
+  duration?: number;
+  unit?: "days" | "months" | "years";
+  manufacturingDate?: string; // ISO date string for frontend
+  expiryDate?: string;        // ISO date string for frontend
+  bestBefore?: string;
+}
+
+export interface IProductVariant {
+  unitValue: number;
+  unitType: "gm" | "kg" | "ml" | "ltr" | "piece" | "packet" | "box";
+  price: number;
+  offerPrice?: number;
+  discount?: number;
+  stock: number;
+  sku?: string;
+  shelfLife?: IShelfLife;
+}
+
 export interface Product {
   _id: string;
   name: string;
   description?: string;
-  price: number;
-  category: string | any;
-  subcategory: string | any;
-  images?: string[];
-  stock?: number;
-  sku?: string;
-  unit?: string;
-  discount?: number;
-  offerPrice?: number;
+  category: string | { _id: string; name: string };
+  subcategory: string | { _id: string; name: string };
+  images: string[];
+  variants: IProductVariant[];
+  published: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 type ProductContextType = {
@@ -44,7 +61,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     setLoadingConfig({...loadingConfig, loading: true, text: 'Getting Products...'});
     try {
       const res = await api.get('/products')
-      setProducts(res.data)
+      setProducts(res.data.data)
     } catch (err: any) {
       console.error('Error fetching products:', err.message)
     }

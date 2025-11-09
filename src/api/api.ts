@@ -2,8 +2,11 @@
 import axios from 'axios';
 // import { navigate } from 'react-router-dom'; // only used in interceptor fallback (optional)
 
+// const baseURL: string = import.meta.env.VITE_API_URL || "";
+
+// https://kirana-admin-services.vercel.app/api
 export const api = axios.create({
-  baseURL: 'https://kirana-admin-services.vercel.app/api',
+  baseURL: 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' }
 });
 

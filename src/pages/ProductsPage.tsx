@@ -1,91 +1,125 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useProducts } from '../context/ProductContext';
-import { useCategories } from '../context/CategoryContext';
-import ProductForm from '../components/products/ProductForm';
-import ProductCard from '../components/products/ProductCard';
-import ProductCardAdmin from '../components/products/Card';
-import NoData from '../components/common/NoData';
-import Loading from '../components/common/Loading';
+import React, { useState, useEffect } from "react";
+import { useProducts } from "../context/ProductContext";
+import { useCategories } from "../context/CategoryContext";
+import ProductForm from "../components/products/ProductForm";
+import ProductCard from "../components/products/ProductCard";
+import NoData from "../components/common/NoData";
+import Loading from "../components/common/Loading";
 
-const ProductsPage = () => {
-  const { loadingConfig, products, fetchProducts, createProduct, updateProduct, deleteProduct } = useProducts()
-  const { categories, fetchCategories } = useCategories()
-  const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState<any>(null)
+const ProductsPage: React.FC = () => {
+  const {
+    loadingConfig,
+    products,
+    fetchProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+  } = useProducts();
 
-  const empty = { name: '', description: '', price: 0, category: '', images: [], stock: 0, sku: '' }
-  const [form, setForm] = useState<any>(empty)
+  const { categories, fetchCategories } = useCategories();
 
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+
+  // ✅ Fetch data on mount
   useEffect(() => {
-    fetchProducts().catch(console.error)
-    fetchCategories().catch(console.error)
-  }, [])
+    Promise.all([fetchProducts(), fetchCategories()]).catch(console.error);
+  }, []);
 
+  console.log(products);
+
+  /** ✅ Open Create Form */
   const openCreate = () => {
-    setEditing(null)
-    setForm(empty)
-    setShowForm(true)
-  }
+    setEditingProduct(null);
+    setShowForm(true);
+  };
 
-  const openEdit = (p: any) => {
-    setEditing(p)
-    setForm({ ...p, images: p.images?.join(', ') || '' })
-    setShowForm(true)
-  }
+  /** ✅ Open Edit Form */
+  const openEdit = (product: any) => {
+    setEditingProduct(product);
+    setShowForm(true);
+  };
 
+  /** ✅ Handle Form Submit (Create / Update) */
   const handleSubmit = async (formData: FormData) => {
     try {
-      if (editing) {
-        await updateProduct(editing._id, formData);
+      if (editingProduct) {
+        await updateProduct(editingProduct._id, formData);
       } else {
-        await createProduct(formData)
+        await createProduct(formData);
       }
-      setShowForm(false)
+
+      await fetchProducts();
+      setShowForm(false);
+      setEditingProduct(null);
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message)
+      alert(err.response?.data?.message || err.message);
     }
-  }
+  };
+
+  /** ✅ Handle Delete */
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      await deleteProduct(id);
+      await fetchProducts();
+    }
+  };
 
   return (
     <div className="p-4 md:p-6">
-      {/* Header */}
+      {/* ---------- Header ---------- */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Products</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          Products
+        </h1>
         <button
           onClick={openCreate}
           className="w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all"
         >
-          Add Product
+          + Add Product
         </button>
       </div>
-      {loadingConfig.loading && (<Loading size={40} fullscreen={true} color="fill-blue-500" text={loadingConfig.text} />)}
-      {/* Product Cards */}
-      {products.length === 0 ? (
+
+      {/* ---------- Loading ---------- */}
+      {loadingConfig.loading && (
+        <Loading
+          size={40}
+          fullscreen={true}
+          color="fill-blue-500"
+          text={loadingConfig.text}
+        />
+      )}
+
+      {/* ---------- Product Cards ---------- */}
+      {products.length === 0 && !loadingConfig.loading ? (
         <NoData />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {products.map((p) => (
             <ProductCard
               key={p._id}
               product={p}
               onEdit={openEdit}
-              onDelete={deleteProduct}
+              onDelete={handleDelete}
             />
           ))}
         </div>
       )}
 
-      {/* Modal Form */}
+      {/* ---------- Product Form Modal ---------- */}
       {showForm && (
         <ProductForm
-          initialData={editing}
+          initialData={editingProduct}
           onSubmit={handleSubmit}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingProduct(null);
+          }}
           categories={categories}
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ProductsPage
+export default ProductsPage;
