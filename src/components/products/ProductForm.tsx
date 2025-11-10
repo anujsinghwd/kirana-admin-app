@@ -1,30 +1,13 @@
 import React, { useEffect, useState } from "react";
 import ImageUploader from "../common/ImageUploader";
 import VariantModal from "./VariantModal";
+import VariantTable from "./VariantTable";
 import { appendIfExists } from "../../utils/utils";
 import { useSubCategories } from "../../context/SubCategoryContext";
-import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import { IProductVariant } from "../../context/ProductContext";
-import VariantTable from "./VariantTable";
+import { FaPlus } from "react-icons/fa";
+import type { IProductVariant } from "../../context/ProductContext";
 
 /** ---------- Types ---------- */
-export interface VariantForm {
-  unitValue: number;
-  unitType: string;
-  price: number;
-  offerPrice?: number;
-  discount?: number;
-  stock: number;
-  sku?: string;
-  shelfLife?: {
-    duration?: number;
-    unit?: "days" | "months" | "years";
-    manufacturingDate?: string;
-    expiryDate?: string;
-    bestBefore?: string;
-  };
-}
-
 interface Category {
   _id: string;
   name: string;
@@ -52,6 +35,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
     category: "",
     subcategory: "",
     published: true,
+    isLoose: false,
+  });
+
+  const [looseConfig, setLooseConfig] = useState({
+    unitType: "kg",
+    pricePerUnit: 0,
+    availableQty: 0,
+    minQtyAllowed: 100,
+    stepQty: 50,
   });
 
   const [variants, setVariants] = useState<IProductVariant[]>([]);
@@ -80,7 +72,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
             ? initialData.subcategory
             : initialData.subcategory?._id || "",
         published: initialData.published ?? true,
+        isLoose: initialData.isLoose ?? false,
       });
+
+      setLooseConfig(
+        initialData.looseConfig || {
+          unitType: "kg",
+          pricePerUnit: 0,
+          availableQty: 0,
+          minQtyAllowed: 100,
+          stepQty: 50,
+        }
+      );
+
       setVariants(initialData.variants || []);
       setExistingImages(initialData.images || []);
     }
@@ -92,10 +96,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   }, [form.category]);
 
   /** ✅ Image handling */
-  const handleImageChange = (files: FileList | null) => {
-    setImages(files);
-  };
-
+  const handleImageChange = (files: FileList | null) => setImages(files);
   const removeExistingImage = (url: string) => {
     setDeletedImages((prev) => [...prev, url]);
     setExistingImages((prev) => prev.filter((img) => img !== url));
@@ -125,13 +126,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
     formData.append("category", form.category);
     formData.append("subcategory", form.subcategory);
     formData.append("published", String(form.published));
-    formData.append("variants", JSON.stringify(variants));
+    formData.append("isLoose", String(form.isLoose));
+
+    if (form.isLoose) {
+      formData.append("looseConfig", JSON.stringify(looseConfig));
+    } else {
+      formData.append("variants", JSON.stringify(variants));
+    }
 
     if (images) Array.from(images).forEach((img) => formData.append("images", img));
     if (deletedImages.length > 0)
       formData.append("deletedImages", JSON.stringify(deletedImages));
 
-    console.log(formData);
     try {
       await onSubmit(formData);
     } finally {
@@ -164,6 +170,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-6">
           {/* ---------- Basic Info ---------- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
               <input
@@ -174,6 +181,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               />
             </div>
 
+            {/* Category */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Category</label>
               <select
@@ -190,6 +198,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               </select>
             </div>
 
+            {/* Subcategory */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Subcategory</label>
               <select
@@ -206,6 +215,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               </select>
             </div>
 
+            {/* Status */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Status</label>
               <select
@@ -219,6 +229,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <option value="false">Unpublished</option>
               </select>
             </div>
+          </div>
+
+          {/* ---------- Loose Product Toggle ---------- */}
+          <div className="flex items-center gap-3 border-b pb-3">
+            <input
+              type="checkbox"
+              id="isLoose"
+              checked={form.isLoose}
+              onChange={(e) =>
+                setForm({ ...form, isLoose: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+            <label htmlFor="isLoose" className="text-sm font-medium text-gray-700">
+              Is Loose Product?
+            </label>
           </div>
 
           {/* ---------- Description ---------- */}
@@ -265,34 +291,113 @@ const ProductForm: React.FC<ProductFormProps> = ({
             )}
           </div>
 
-          {/* ---------- Variants ---------- */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium text-gray-700 text-base">Variants</h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingVariant(null);
-                  setEditingIndex(null);
+          {/* ---------- Conditional Sections ---------- */}
+          {!form.isLoose ? (
+            // ✅ Variant Section
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium text-gray-700 text-base">Variants</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingVariant(null);
+                    setEditingIndex(null);
+                    setVariantModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                >
+                  <FaPlus /> Add Variant
+                </button>
+              </div>
+
+              <VariantTable
+                variants={variants}
+                onEdit={(v, i) => {
+                  setEditingVariant(v);
+                  setEditingIndex(i);
                   setVariantModalOpen(true);
                 }}
-                className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-              >
-                <FaPlus /> Add Variant
-              </button>
+                onDelete={(i) => setVariants(variants.filter((_, idx) => idx !== i))}
+              />
             </div>
+          ) : (
+            // ⚖️ Loose Product Config
+            <div className="space-y-3 border p-3 rounded-md bg-gray-50">
+              <h3 className="font-medium text-gray-700 text-base">
+                Loose Product Configuration
+              </h3>
 
-            {/* ✅ Reusable Variant Table */}
-            <VariantTable
-              variants={variants}
-              onEdit={(v, i) => {
-                setEditingVariant(v);
-                setEditingIndex(i);
-                setVariantModalOpen(true);
-              }}
-              onDelete={(i) => setVariants(variants.filter((_, idx) => idx !== i))}
-            />
-          </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Unit Type</label>
+                  <select
+                    value={looseConfig.unitType}
+                    onChange={(e) =>
+                      setLooseConfig({ ...looseConfig, unitType: e.target.value })
+                    }
+                    className="w-full border rounded p-2 text-sm"
+                  >
+                    <option value="kg">Kilogram</option>
+                    <option value="gm">Gram</option>
+                    <option value="ltr">Litre</option>
+                    <option value="ml">Millilitre</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Price / Unit</label>
+                  <input
+                    type="number"
+                    value={looseConfig.pricePerUnit}
+                    onChange={(e) =>
+                      setLooseConfig({ ...looseConfig, pricePerUnit: Number(e.target.value) })
+                    }
+                    className="w-full border rounded p-2 text-sm"
+                    placeholder="₹ per kg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Available Quantity
+                  </label>
+                  <input
+                    type="number"
+                    value={looseConfig.availableQty}
+                    onChange={(e) =>
+                      setLooseConfig({ ...looseConfig, availableQty: Number(e.target.value) })
+                    }
+                    className="w-full border rounded p-2 text-sm"
+                    placeholder="Total Stock"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Min Qty Allowed</label>
+                  <input
+                    type="number"
+                    value={looseConfig.minQtyAllowed}
+                    onChange={(e) =>
+                      setLooseConfig({ ...looseConfig, minQtyAllowed: Number(e.target.value) })
+                    }
+                    className="w-full border rounded p-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Step Quantity</label>
+                  <input
+                    type="number"
+                    value={looseConfig.stepQty}
+                    onChange={(e) =>
+                      setLooseConfig({ ...looseConfig, stepQty: Number(e.target.value) })
+                    }
+                    className="w-full border rounded p-2 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ---------- Footer ---------- */}
