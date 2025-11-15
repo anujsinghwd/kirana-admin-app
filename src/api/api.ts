@@ -7,15 +7,20 @@ import axios from 'axios';
 // export const baseURL: string = import.meta.env.VITE_API_URL as string;
 
 export const api = axios.create({
-  baseURL: 'https://kirana-admin-services.vercel.app/api',
+  baseURL: 'ttps://kirana-admin-services.vercel.app/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
-// helper to set token
-export const setAuthToken = (token?: string | null) => {
-  if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  else delete api.defaults.headers.common.Authorization;
-};
+// call to set/remove Authorization header
+export function setAuthToken(token: string | null) {
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    localStorage.setItem("accesstoken", token); // keep storage consistent
+  } else {
+    delete api.defaults.headers.common["Authorization"];
+    localStorage.removeItem("accesstoken");
+  }
+}
 
 // Optional: global response interceptor for 401 (token expired/invalid)
 api.interceptors.response.use(
@@ -23,7 +28,7 @@ api.interceptors.response.use(
   (error) => {
     if (error?.response?.status === 401) {
       // user must re-login - opportunistically clear token from localStorage
-      localStorage.removeItem('token');
+      localStorage.removeItem('accesstoken');
       localStorage.removeItem('user');
       // don't do direct navigation here (causes issues outside react), instead return error
     }

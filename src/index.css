@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+  }
+
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+}

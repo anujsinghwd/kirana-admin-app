@@ -26,8 +26,6 @@ const ProductsPage: React.FC = () => {
     Promise.all([fetchProducts(), fetchCategories()]).catch(console.error);
   }, []);
 
-  console.log(products);
-
   /** ✅ Open Create Form */
   const openCreate = () => {
     setEditingProduct(null);

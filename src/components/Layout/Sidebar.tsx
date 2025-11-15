@@ -24,6 +24,7 @@ const Navbar = () => {
         <Link to="/products" className="hover:text-blue-600 font-medium">Products</Link>
         <Link to="/categories" className="hover:text-blue-600 font-medium">Categories</Link>
         <Link to="/sub-categories" className="hover:text-blue-600 font-medium">Sub Categories</Link>
+        <Link to="/orders" className="hover:text-blue-600 font-medium">Orders</Link>
         <span className="text-gray-500 text-sm">Hi, {user?.name || 'Admin'}</span>
         <button
           onClick={handleLogout}
@@ -77,6 +78,16 @@ const Navbar = () => {
             onClick={() => setIsOpen(false)}
           >
             Sub Categories
+          </NavLink>
+
+          <NavLink
+            to="/orders"
+            className={({ isActive }) =>
+              `p-2 rounded hover:bg-gray-100 ${isActive ? 'bg-gray-100 font-semibold' : ''}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            Orders
           </NavLink>
 
           <div className="flex justify-between items-center pt-3 border-t border-gray-100">
