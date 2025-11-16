@@ -59,7 +59,9 @@ const InvoicePage: React.FC = () => {
           {order?.delivery_address && (
             <p className="mt-1">
               <span className="font-semibold">Delivery Address:</span>  
-              <br /> {order?.delivery_address}
+              <br /> {`${order.delivery_address?.address_line}`}
+              <br /> {`${order.delivery_address?.city}`}
+              <br /> {`${order.delivery_address?.state} - ${order.delivery_address.pincode}`}
             </p>
           )}
         </div>

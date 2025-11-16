@@ -26,6 +26,13 @@ interface AssignedPersonnel {
   contact?: string;
 }
 
+interface DeliveryAddress {
+  address_line: string;
+  city: string;
+  state: string;
+  pincode: number;
+}
+
 export interface Order {
   _id: string;
   orderId: string;
@@ -37,7 +44,7 @@ export interface Order {
   items: OrderItem[];
   tracking?: TrackingLog[];
   assigned_personnel?: AssignedPersonnel[];
-  delivery_address?: string;
+  delivery_address?: DeliveryAddress;
   subTotalAmt: number;
   totalDiscount: number;
 }

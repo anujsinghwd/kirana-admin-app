@@ -1,17 +1,17 @@
 // src/pages/AdminOrderDetail.tsx
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FaChevronLeft,
   FaUserAlt,
   FaMapMarkerAlt,
   FaCircle,
-  FaTruck,
-  FaClock,
-  FaCheckCircle,
-  FaUserPlus,
+  // FaTruck,
+  // FaClock,
+  // FaCheckCircle,
+  // FaUserPlus,
   FaFileInvoice,
-  FaPaperPlane,
+  // FaPaperPlane,
 } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 import { useOrders } from "../../context/OrderContext";
@@ -49,8 +49,8 @@ const OrderDetailPage: React.FC = () => {
     loadingConfig,
     updateOrderStatus,
     assignPersonnel,
-    addTracking,
-    downloadInvoice, // optional helper from context
+    // addTracking,
+    // downloadInvoice, // optional helper from context
     fetchOrders, // to refresh list after updates
   } = useOrders() as any;
 
@@ -59,14 +59,13 @@ const OrderDetailPage: React.FC = () => {
   const [staff, setStaff] = useState<StaffPayload>({ name: "", contact: "", role: "Delivery" });
   const [note, setNote] = useState<string>("");
 
+  useEffect(() => { setLocalOrder(singleOrder) }, [singleOrder]);
+
   useEffect(() => {
     if (!orderId) return;
     (async () => {
       try {
-        const data = await fetchOrderById(orderId);
-        // some contexts return data.data or data — attempt both
-        // console.log(data);
-        // setLocalOrder(data?.data ?? data ?? order ?? null);
+        await fetchOrderById(orderId);
       } catch (err) {
         toast.error("Failed to load order");
       }
@@ -153,40 +152,41 @@ const OrderDetailPage: React.FC = () => {
       setStaff({ name: "", contact: "", role: "Delivery" });
       setAssignVisible(false);
       const refreshed = await fetchOrderById(orderId);
-    //   setLocalOrder(refreshed?.data ?? refreshed ?? localOrder);
+      //   setLocalOrder(refreshed?.data ?? refreshed ?? localOrder);
     } catch (err) {
       toast.error("Failed to assign");
     }
   };
 
-  const handleAddTracking = async () => {
-    if (!note.trim()) {
-      toast.error("Add a note for tracking");
-      return;
-    }
-    try {
-      await addTracking(oid || _id || localOrder._id, { status: order_status, note });
-      toast.success("Note added");
-      setNote("");
-      const refreshed = await fetchOrderById(orderId);
-    //   setLocalOrder(refreshed?.data ?? refreshed ?? localOrder);
-    } catch {
-      toast.error("Failed to add note");
-    }
-  };
+  // const handleAddTracking = async () => {
+  //   if (!note.trim()) {
+  //     toast.error("Add a note for tracking");
+  //     return;
+  //   }
+  //   try {
+  //     await addTracking(oid || _id || localOrder._id, { status: order_status, note });
+  //     toast.success("Note added");
+  //     setNote("");
+  //     const refreshed = await fetchOrderById(orderId);
+  //     //   setLocalOrder(refreshed?.data ?? refreshed ?? localOrder);
+  //   } catch {
+  //     toast.error("Failed to add note");
+  //   }
+  // };
 
   const handleDownloadInvoice = async () => {
-    try {
-      if (downloadInvoice) {
-        await downloadInvoice(oid || _id || localOrder._id);
-      } else if (invoice_receipt) {
-        window.open(invoice_receipt, "_blank");
-      } else {
-        toast.error("No invoice available");
-      }
-    } catch {
-      toast.error("Failed to download invoice");
-    }
+    navigate(`/invoice/${orderId}`);
+    // try {
+    //   if (downloadInvoice) {
+    //     await downloadInvoice(oid || _id || localOrder._id);
+    //   } else if (invoice_receipt) {
+    //     window.open(invoice_receipt, "_blank");
+    //   } else {
+    //     toast.error("No invoice available");
+    //   }
+    // } catch {
+    //   toast.error("Failed to download invoice");
+    // }
   };
 
   return (
@@ -242,7 +242,7 @@ const OrderDetailPage: React.FC = () => {
           <div className="flex items-start gap-3">
             <FaUserAlt className="text-gray-500 mt-1" />
             <div className="text-sm">
-              <div className="font-medium">{localOrder.userId?.name}</div>
+              <div className="font-medium">{localOrder.customer_name?.name}</div>
               <div className="text-xs text-gray-500">{localOrder.userId?.mobile}</div>
             </div>
           </div>
@@ -255,10 +255,10 @@ const OrderDetailPage: React.FC = () => {
               <FaMapMarkerAlt className="text-gray-500 mt-1" />
               <div className="text-sm">
                 <div className="font-medium">
-                  {delivery_address?.name || `${delivery_address?.addressLine1 ?? ""}`}
+                  {delivery_address?.name || `${delivery_address?.address_line ?? ""}`}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {delivery_address?.addressLine1 ?? ""} {delivery_address?.addressLine2 ?? ""} <br />
+                  {delivery_address?.addressLine1 ?? ""} {delivery_address?.state ?? ""} <br />
                   {delivery_address?.city ?? ""} {delivery_address?.pincode ?? ""}
                 </div>
               </div>
@@ -354,7 +354,7 @@ const OrderDetailPage: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-3">
+        {/* <div className="mt-3">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -366,7 +366,7 @@ const OrderDetailPage: React.FC = () => {
             <button onClick={handleAddTracking} className="flex-1 bg-green-600 text-white px-3 py-2 rounded">Add Note</button>
             <button onClick={() => setNote("")} className="px-3 py-2 bg-gray-100 rounded">Clear</button>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {/* personnel & actions */}
