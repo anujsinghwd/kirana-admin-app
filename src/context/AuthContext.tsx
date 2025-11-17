@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(t);
         // optional: validate token & fetch user profile
         try {
-          const res = await api.get("/users/me"); // adjust to your endpoint
+          const res = await api.get("/admin/users/me"); // adjust to your endpoint
           const u = res.data;
           setUser(u || null);
           if (u) localStorage.setItem("user", JSON.stringify(u));
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setAuthLoading(true);
     try {
-      const res = await api.post("/users/login", { email, password }); // adjust
+      const res = await api.post("/admin/users/login", { email, password }); // adjust
       const t = res.data?.data?.accessToken || res.data?.token;
       const u = res.data?.data?.user || res.data?.user;
       if (t) {

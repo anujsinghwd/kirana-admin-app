@@ -17,7 +17,7 @@ import AdminOrdersPage from './pages/OrderPage';
 import InvoicePage from './pages/order/InvoicePage';
 import OrderDetailPage from './pages/order/OrderDetail';
 
-const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Dashboard = React.lazy(() => import('./pages/dashboard/Dashboard'));
 const CategoriesPage = React.lazy(() => import('./pages/CategoriesPage'));
 const ProductsPage = React.lazy(() => import('./pages/ProductsPage'));
 

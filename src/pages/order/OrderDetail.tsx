@@ -13,9 +13,11 @@ import {
   FaFileInvoice,
   // FaPaperPlane,
 } from "react-icons/fa";
-import { MdCancel } from "react-icons/md";
+import dayjs from "dayjs";
+// import { MdCancel } from "react-icons/md";
 import { useOrders } from "../../context/OrderContext";
 import toast from "react-hot-toast";
+// import Loading from "../../components/common/Loading";
 
 type StaffPayload = {
   name: string;
@@ -114,7 +116,6 @@ const OrderDetailPage: React.FC = () => {
     items,
     tracking = [],
     assigned_personnel = [],
-    invoice_receipt,
   } = localOrder;
 
   const handleStatusUpdate = async (newStatus: string) => {
@@ -151,7 +152,7 @@ const OrderDetailPage: React.FC = () => {
       toast.success("Personnel assigned");
       setStaff({ name: "", contact: "", role: "Delivery" });
       setAssignVisible(false);
-      const refreshed = await fetchOrderById(orderId);
+      await fetchOrderById(orderId);
       //   setLocalOrder(refreshed?.data ?? refreshed ?? localOrder);
     } catch (err) {
       toast.error("Failed to assign");
@@ -198,8 +199,10 @@ const OrderDetailPage: React.FC = () => {
             <FaChevronLeft />
           </button>
           <div>
-            <h1 className="text-base font-semibold">Order #{oid}</h1>
-            <p className="text-xs text-gray-500">{new Date(createdAt).toLocaleString()}</p>
+            <h1 className="text-base font-semibold">#{oid}</h1>
+            <p className="text-xs text-gray-500">
+                {dayjs(createdAt).format("DD MMM, YYYY • h:mm A")}
+            </p>
           </div>
         </div>
 
@@ -243,7 +246,7 @@ const OrderDetailPage: React.FC = () => {
             <FaUserAlt className="text-gray-500 mt-1" />
             <div className="text-sm">
               <div className="font-medium">{localOrder.customer_name?.name}</div>
-              <div className="text-xs text-gray-500">{localOrder.userId?.mobile}</div>
+              <div className="text-xs text-gray-500">{localOrder.delivery_address?.mobile}</div>
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ import { MdCancel } from "react-icons/md";
 import { useOrders } from "../context/OrderContext";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import Loading from "../components/common/Loading";
 
 /* ---------------------------------------------------
  * Status Badge — UI helper
@@ -34,9 +35,8 @@ const StatusBadge = ({ status }: { status: string }) => {
 
   return (
     <span
-      className={`text-xs font-semibold px-2 py-1 rounded-full ${
-        colorMap[status] || "bg-gray-200 text-gray-600"
-      }`}
+      className={`text-xs font-semibold px-2 py-1 rounded-full ${colorMap[status] || "bg-gray-200 text-gray-600"
+        }`}
     >
       {status}
     </span>
@@ -252,9 +252,7 @@ const AdminOrdersPage: React.FC = () => {
       </div>
 
       {/* Loading */}
-      {loadingConfig.loading && (
-        <p className="text-center text-gray-500 mb-4">{loadingConfig.text}</p>
-      )}
+      {loadingConfig.loading && (<Loading size={40} color="fill-blue-500" text={loadingConfig.text} />)}
 
       {/* No Orders */}
       {!loadingConfig.loading && orders.length === 0 && (
@@ -298,7 +296,7 @@ const AdminOrdersPage: React.FC = () => {
                 >
                   <FaEye className="text-gray-600" />
                 </button>
-                
+
                 <StatusBadge status={order.order_status} />
 
                 {expandedOrder === order._id ? (
