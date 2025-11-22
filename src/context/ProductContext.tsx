@@ -21,6 +21,14 @@ export interface IProductVariant {
   shelfLife?: IShelfLife;
 }
 
+export interface LooseConfig {
+  unitType: string;
+  pricePerUnit: number;
+  availableQty: number;
+  minQtyAllowed: number;
+  stepQty: number;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -30,6 +38,8 @@ export interface Product {
   images: string[];
   variants: IProductVariant[];
   published: boolean;
+  isLoose?: boolean;
+  looseConfig?: LooseConfig;
   createdAt?: string;
   updatedAt?: string;
 }

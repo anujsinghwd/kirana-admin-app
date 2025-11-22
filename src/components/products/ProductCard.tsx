@@ -17,12 +17,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   // Get first variant for display
   const firstVariant = product.variants?.[0];
-  const hasOffer = firstVariant?.offerPrice && firstVariant.offerPrice < firstVariant.price;
-  const displayPrice = hasOffer ? firstVariant.offerPrice : firstVariant?.price;
-  const originalPrice = hasOffer ? firstVariant.price : null;
+
+  // Price logic
+  let displayPrice: number | undefined;
+  let originalPrice: number | null = null;
+  let unitDisplay: string = "";
+  let hasOffer = false;
+
+  if (product.isLoose && product.looseConfig) {
+    displayPrice = product.looseConfig.pricePerUnit;
+    unitDisplay = `per ${product.looseConfig.unitType}`;
+  } else if (firstVariant) {
+    hasOffer = !!(firstVariant.offerPrice && firstVariant.offerPrice < firstVariant.price);
+    displayPrice = hasOffer ? firstVariant.offerPrice : firstVariant.price;
+    originalPrice = hasOffer ? firstVariant.price : null;
+    unitDisplay = `${firstVariant.unitValue} ${firstVariant.unitType}`;
+  }
 
   // Calculate total stock
-  const totalStock = product.variants?.reduce((sum, v) => sum + (v.stock ?? 0), 0) ?? 0;
+  const totalStock = product.isLoose
+    ? product.looseConfig?.availableQty ?? 0
+    : product.variants?.reduce((sum, v) => sum + (v.stock ?? 0), 0) ?? 0;
 
   // Determine stock status
   const getStockStatus = () => {
@@ -132,9 +147,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 )}
               </div>
             )}
-            {firstVariant && (
+            {unitDisplay && (
               <p className="text-xs text-gray-500 mt-1">
-                {firstVariant.unitValue} {firstVariant.unitType}
+                {unitDisplay}
               </p>
             )}
           </div>
