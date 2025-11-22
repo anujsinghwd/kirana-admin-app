@@ -8,9 +8,7 @@ import {
   FaSearch,
   FaTimes,
   FaBox,
-  FaFilter,
-  FaSort,
-  FaLayerGroup,
+  FaFilter
 } from "react-icons/fa";
 
 // Skeleton Loader Component
@@ -42,6 +40,7 @@ const ProductsPage: React.FC = () => {
   const {
     loadingConfig,
     products,
+    pagination,
     fetchProducts,
     createProduct,
     updateProduct,
@@ -57,67 +56,27 @@ const ProductsPage: React.FC = () => {
   const [stockFilter, setStockFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const debouncedSearch = useDebounce(search, 400);
 
-  // Fetch data on mount
+  // Fetch data on mount and when pagination, category, or search changes
   useEffect(() => {
-    Promise.all([fetchProducts(), fetchCategories()]).catch(console.error);
-  }, []);
+    Promise.all([
+      fetchProducts(currentPage, itemsPerPage, selectedCategory || undefined, debouncedSearch || undefined),
+      categories?.length === 0 ? fetchCategories() : null
+    ]).catch(console.error);
+  }, [currentPage, itemsPerPage, selectedCategory, debouncedSearch]);
 
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let filtered = [...products];
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
-    // Search filter
-    if (debouncedSearch) {
-      filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => {
-        const catId = typeof p.category === "string" ? p.category : p.category?._id;
-        return catId === selectedCategory;
-      });
-    }
-
-    // Stock filter
-    if (stockFilter === "in-stock") {
-      filtered = filtered.filter((p) =>
-        p.variants?.some((v) => (v.stock ?? 0) > 10)
-      );
-    } else if (stockFilter === "low-stock") {
-      filtered = filtered.filter((p) =>
-        p.variants?.some((v) => (v.stock ?? 0) > 0 && (v.stock ?? 0) <= 10)
-      );
-    } else if (stockFilter === "out-of-stock") {
-      filtered = filtered.filter((p) =>
-        p.variants?.every((v) => (v.stock ?? 0) === 0)
-      );
-    }
-
-    // Sort
-    if (sortBy === "name") {
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortBy === "price-low") {
-      filtered.sort((a, b) => {
-        const priceA = a.variants?.[0]?.price ?? 0;
-        const priceB = b.variants?.[0]?.price ?? 0;
-        return priceA - priceB;
-      });
-    } else if (sortBy === "price-high") {
-      filtered.sort((a, b) => {
-        const priceA = a.variants?.[0]?.price ?? 0;
-        const priceB = b.variants?.[0]?.price ?? 0;
-        return priceB - priceA;
-      });
-    }
-
-    return filtered;
-  }, [products, debouncedSearch, selectedCategory, stockFilter, sortBy]);
+  // For now, use products directly from context
+  // In future, you can add client-side filtering if needed
+  const filteredProducts = products;
 
   const activeFilterCount = [selectedCategory, stockFilter].filter(Boolean).length;
 
@@ -139,7 +98,7 @@ const ProductsPage: React.FC = () => {
         await createProduct(formData);
       }
 
-      await fetchProducts();
+      await fetchProducts(currentPage, itemsPerPage, selectedCategory || undefined, debouncedSearch || undefined);
       setShowForm(false);
       setEditingProduct(null);
     } catch (err: any) {
@@ -150,8 +109,22 @@ const ProductsPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       await deleteProduct(id);
-      await fetchProducts();
+      await fetchProducts(currentPage, itemsPerPage, selectedCategory || undefined, debouncedSearch || undefined);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(1); // Reset to first page when changing category
   };
 
   const clearFilters = () => {
@@ -186,7 +159,7 @@ const ProductsPage: React.FC = () => {
               <FaBox className="text-indigo-600 text-xl" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{filteredProducts.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{pagination.totalItems}</p>
               <p className="text-sm text-gray-500">Total Products</p>
             </div>
           </div>
@@ -216,8 +189,8 @@ const ProductsPage: React.FC = () => {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`w-full h-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all border ${showFilters || activeFilterCount > 0
-                  ? "bg-indigo-50 border-indigo-200 text-indigo-700"
-                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
                 }`}
             >
               <FaFilter />
@@ -241,7 +214,7 @@ const ProductsPage: React.FC = () => {
                 </label>
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="">All Categories</option>
@@ -251,7 +224,7 @@ const ProductsPage: React.FC = () => {
                 </select>
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Stock Status
                 </label>
@@ -265,9 +238,9 @@ const ProductsPage: React.FC = () => {
                   <option value="low-stock">Low Stock (1-10)</option>
                   <option value="out-of-stock">Out of Stock</option>
                 </select>
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <FaSort /> Sort By
                 </label>
@@ -280,7 +253,7 @@ const ProductsPage: React.FC = () => {
                   <option value="price-low">Price (Low to High)</option>
                   <option value="price-high">Price (High to Low)</option>
                 </select>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-end mt-4 pt-4 border-t border-gray-100">
@@ -298,7 +271,7 @@ const ProductsPage: React.FC = () => {
         {!showFilters && (
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-6">
             <button
-              onClick={() => setSelectedCategory("")}
+              onClick={() => handleCategoryChange("")}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === ""
                 ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
                 : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -309,7 +282,7 @@ const ProductsPage: React.FC = () => {
             {categories.map((cat) => (
               <button
                 key={cat._id}
-                onClick={() => setSelectedCategory(cat._id)}
+                onClick={() => handleCategoryChange(cat._id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat._id
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
                   : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -368,16 +341,163 @@ const ProductsPage: React.FC = () => {
 
         {/* Product Grid */}
         {!loadingConfig.loading && filteredProducts.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredProducts.map((p) => (
-              <ProductCard
-                key={p._id}
-                product={p}
-                onEdit={openEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {filteredProducts.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                {/* Pagination Info */}
+                <div className="text-sm text-gray-600">
+                  Showing{" "}
+                  <span className="font-semibold text-gray-900">
+                    {(pagination.currentPage - 1) * pagination.itemsPerPage + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-semibold text-gray-900">
+                    {Math.min(
+                      pagination.currentPage * pagination.itemsPerPage,
+                      pagination.totalItems
+                    )}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-gray-900">
+                    {pagination.totalItems}
+                  </span>{" "}
+                  products
+                </div>
+
+                {/* Page Navigation */}
+                <div className="flex items-center gap-2">
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                    className={`px-3 py-2 rounded-lg font-medium transition-all ${pagination.currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisible = 5;
+                      let startPage = Math.max(
+                        1,
+                        pagination.currentPage - Math.floor(maxVisible / 2)
+                      );
+                      let endPage = Math.min(
+                        pagination.totalPages,
+                        startPage + maxVisible - 1
+                      );
+
+                      if (endPage - startPage < maxVisible - 1) {
+                        startPage = Math.max(1, endPage - maxVisible + 1);
+                      }
+
+                      // First page
+                      if (startPage > 1) {
+                        pages.push(
+                          <button
+                            key={1}
+                            onClick={() => handlePageChange(1)}
+                            className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all"
+                          >
+                            1
+                          </button>
+                        );
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="ellipsis1" className="px-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                      }
+
+                      // Page numbers
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            onClick={() => handlePageChange(i)}
+                            className={`px-3 py-2 rounded-lg font-medium transition-all ${i === pagination.currentPage
+                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                              : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+
+                      // Last page
+                      if (endPage < pagination.totalPages) {
+                        if (endPage < pagination.totalPages - 1) {
+                          pages.push(
+                            <span key="ellipsis2" className="px-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        pages.push(
+                          <button
+                            key={pagination.totalPages}
+                            onClick={() => handlePageChange(pagination.totalPages)}
+                            className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all"
+                          >
+                            {pagination.totalPages}
+                          </button>
+                        );
+                      }
+
+                      return pages;
+                    })()}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className={`px-3 py-2 rounded-lg font-medium transition-all ${pagination.currentPage === pagination.totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    Next
+                  </button>
+                </div>
+
+                {/* Items Per Page Selector */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Per page:</label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

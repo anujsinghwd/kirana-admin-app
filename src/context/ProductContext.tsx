@@ -34,11 +34,19 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
 type ProductContextType = {
   products: Product[]
   uploadProgress: number
   loadingConfig: LoadingConfig
-  fetchProducts: () => Promise<void>
+  pagination: PaginationData
+  fetchProducts: (page?: number, limit?: number, category?: string, search?: string) => Promise<void>
   createProduct: (payload: FormData | Partial<Product>) => Promise<void>
   updateProduct: (id: string, payload: FormData | Partial<Product>) => Promise<void>
   deleteProduct: (id: string) => Promise<void>
@@ -55,24 +63,51 @@ export const useProducts = () => {
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([])
   const [uploadProgress, setUploadProgress] = useState<number>(0)
-  const [loadingConfig, setLoadingConfig] = useState<LoadingConfig>({loading: false, text: ''})
+  const [loadingConfig, setLoadingConfig] = useState<LoadingConfig>({ loading: false, text: '' })
+  const [pagination, setPagination] = useState<PaginationData>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10
+  })
 
-  const fetchProducts = async () => {
-    setLoadingConfig({...loadingConfig, loading: true, text: 'Getting Products...'});
+  const fetchProducts = async (page: number = 1, limit: number = 10, category?: string, search?: string) => {
+    setLoadingConfig({ ...loadingConfig, loading: true, text: 'Getting Products...' });
     try {
-      const res = await api.get('/products')
+      const params: any = { page, limit };
+      if (category) {
+        params.category = category;
+      }
+      if (search) {
+        params.q = search;
+      }
+
+      const res = await api.get('/products', { params })
       setProducts(res.data.data)
+
+      // Update pagination data if provided by backend
+      if (res.data.pagination) {
+        setPagination(res.data.pagination)
+      } else {
+        // Fallback if backend doesn't return pagination data
+        setPagination({
+          currentPage: page,
+          totalPages: 1,
+          totalItems: res.data.data.length,
+          itemsPerPage: limit
+        })
+      }
     } catch (err: any) {
       console.error('Error fetching products:', err.message)
     }
-    setLoadingConfig({...loadingConfig, loading: false, text: ''});
+    setLoadingConfig({ ...loadingConfig, loading: false, text: '' });
   }
 
   /**
    * 🔹 Create Product with upload progress tracking
    */
   const createProduct = async (payload: FormData | Partial<Product>) => {
-    setLoadingConfig({...loadingConfig, loading: true, text: 'Adding Product...Please wait'});
+    setLoadingConfig({ ...loadingConfig, loading: true, text: 'Adding Product...Please wait' });
     try {
       const headers =
         payload instanceof FormData
@@ -97,14 +132,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       setUploadProgress(0)
       throw err
     }
-    setLoadingConfig({...loadingConfig, loading: false, text: ''});
+    setLoadingConfig({ ...loadingConfig, loading: false, text: '' });
   }
 
   /**
    * 🔹 Update Product with progress
    */
   const updateProduct = async (id: string, payload: FormData | Partial<Product>) => {
-    setLoadingConfig({...loadingConfig, loading: true, text: 'Update Product...Please wait'});
+    setLoadingConfig({ ...loadingConfig, loading: true, text: 'Update Product...Please wait' });
     try {
       const headers =
         payload instanceof FormData
@@ -129,11 +164,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       setUploadProgress(0)
       throw err
     }
-    setLoadingConfig({...loadingConfig, loading: false, text: ''});
+    setLoadingConfig({ ...loadingConfig, loading: false, text: '' });
   }
 
   const deleteProduct = async (id: string) => {
-    setLoadingConfig({...loadingConfig, loading: true, text: 'Removing Product...Please wait'});
+    setLoadingConfig({ ...loadingConfig, loading: true, text: 'Removing Product...Please wait' });
     try {
       await api.delete(`/products/${id}`)
       await fetchProducts()
@@ -141,7 +176,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error deleting product:', err.message)
       throw err
     }
-    setLoadingConfig({...loadingConfig, loading: false, text: ''});
+    setLoadingConfig({ ...loadingConfig, loading: false, text: '' });
   }
 
   return (
@@ -150,6 +185,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         loadingConfig,
         products,
         uploadProgress,
+        pagination,
         fetchProducts,
         createProduct,
         updateProduct,
