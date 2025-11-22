@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Product } from "../../context/ProductContext";
+import { FaEdit, FaTrash, FaEye, FaBox } from "react-icons/fa";
 
 interface ProductCardProps {
   product: Product;
@@ -12,115 +13,185 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const [showActions, setShowActions] = useState(false);
+
+  // Get first variant for display
+  const firstVariant = product.variants?.[0];
+  const hasOffer = firstVariant?.offerPrice && firstVariant.offerPrice < firstVariant.price;
+  const displayPrice = hasOffer ? firstVariant.offerPrice : firstVariant?.price;
+  const originalPrice = hasOffer ? firstVariant.price : null;
+
+  // Calculate total stock
+  const totalStock = product.variants?.reduce((sum, v) => sum + (v.stock ?? 0), 0) ?? 0;
+
+  // Determine stock status
+  const getStockStatus = () => {
+    if (totalStock === 0) return { label: "Out of Stock", color: "bg-red-100 text-red-700", dotColor: "bg-red-500" };
+    if (totalStock <= 10) return { label: "Low Stock", color: "bg-yellow-100 text-yellow-700", dotColor: "bg-yellow-500" };
+    return { label: "In Stock", color: "bg-green-100 text-green-700", dotColor: "bg-green-500" };
+  };
+
+  const stockStatus = getStockStatus();
+
+  // Get category name
+  const categoryName = typeof product.category === "string"
+    ? product.category
+    : product.category?.name || "Uncategorized";
+
+  // Get first image or placeholder
+  const productImage = product.images?.[0] || "https://via.placeholder.com/300x300?text=No+Image";
+
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 hover:shadow-md transition-all relative">
-      {/* ---------- Product Header ---------- */}
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <h2 className="text-base font-semibold text-gray-900">{product.name}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {(typeof product.category === 'string' ? product.category : product.category?.name) || "Uncategorized"}{" "}
-            {product?.subcategory && (
-              <>› {typeof product.subcategory == 'string' ? product.subcategory : product.subcategory?.name}</>
-            )}
-          </p>
+    <div
+      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group relative"
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
+      {/* Product Image */}
+      <div className="relative h-48 bg-gray-100 overflow-hidden">
+        <img
+          src={productImage}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+        />
+
+        {/* Stock Badge */}
+        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${stockStatus.color} backdrop-blur-sm flex items-center gap-1.5`}>
+          <span className={`w-2 h-2 rounded-full ${stockStatus.dotColor} animate-pulse`}></span>
+          {stockStatus.label}
+        </div>
+
+        {/* Offer Badge */}
+        {hasOffer && (
+          <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white backdrop-blur-sm">
+            SALE
+          </div>
+        )}
+
+        {/* Quick Actions Overlay */}
+        <div
+          className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-3 transition-opacity duration-300 ${showActions ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+        >
+          <button
+            onClick={() => onEdit(product)}
+            className="w-10 h-10 bg-white hover:bg-blue-600 text-blue-600 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg transform hover:scale-110"
+            title="Edit Product"
+          >
+            <FaEdit />
+          </button>
+          <button
+            onClick={() => onDelete(product._id)}
+            className="w-10 h-10 bg-white hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg transform hover:scale-110"
+            title="Delete Product"
+          >
+            <FaTrash />
+          </button>
         </div>
       </div>
 
-      {/* ---------- Description ---------- */}
-      {product.description && (
-        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-          {product.description}
-        </p>
-      )}
-
-      {/* ---------- Images ---------- */}
-      {product.images && product.images.length > 0 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {product.images.map((img, index) => (
-            <img
-              key={index}
-              src={img}
-              alt={product.name}
-              className="w-16 h-16 object-cover rounded-md border border-gray-200 flex-shrink-0"
-            />
-          ))}
+      {/* Product Info */}
+      <div className="p-4">
+        {/* Category Badge */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+            <FaBox className="text-xs" />
+            {categoryName}
+          </span>
+          {product.variants && product.variants.length > 1 && (
+            <span className="text-xs text-gray-500">
+              {product.variants.length} variants
+            </span>
+          )}
         </div>
-      )}
 
-      {/* ---------- Variant Table ---------- */}
-      {product.variants && product.variants.length > 0 && (
-        <div className="mt-3 border border-gray-100 rounded-lg overflow-hidden">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-gray-700 font-medium">
-              <tr>
-                <th className="text-left px-3 py-2">Unit</th>
-                <th className="text-left px-3 py-2">Price</th>
-                <th className="text-left px-3 py-2">Stock</th>
-                <th className="text-left px-3 py-2">Expiry</th>
-              </tr>
-            </thead>
-            <tbody>
-              {product.variants.map((variant, i) => (
-                <tr
+        {/* Product Name */}
+        <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2 min-h-[2.5rem]">
+          {product.name}
+        </h3>
+
+        {/* Description */}
+        {product.description && (
+          <p className="text-sm text-gray-600 line-clamp-2 mb-3 min-h-[2.5rem]">
+            {product.description}
+          </p>
+        )}
+
+        {/* Price and Stock */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+          <div>
+            {displayPrice !== undefined && (
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-green-600">
+                  ₹{displayPrice}
+                </span>
+                {originalPrice && (
+                  <span className="text-sm text-gray-400 line-through">
+                    ₹{originalPrice}
+                  </span>
+                )}
+              </div>
+            )}
+            {firstVariant && (
+              <p className="text-xs text-gray-500 mt-1">
+                {firstVariant.unitValue} {firstVariant.unitType}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-semibold text-gray-700">
+              Stock: {totalStock}
+            </p>
+            {firstVariant?.shelfLife?.expiryDate && (
+              <p className="text-xs text-gray-500 mt-1">
+                Exp: {new Date(firstVariant.shelfLife.expiryDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short"
+                })}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Variants Preview (if multiple) */}
+        {product.variants && product.variants.length > 1 && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <p className="text-xs text-gray-500 mb-2">Available Variants:</p>
+            <div className="flex flex-wrap gap-1">
+              {product.variants.slice(0, 3).map((variant, i) => (
+                <span
                   key={i}
-                  className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                  className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
                 >
-                  {/* Unit */}
-                  <td className="px-3 py-2">
-                    {variant.unitValue} {variant.unitType}
-                  </td>
-
-                  {/* Price + Offer Price */}
-                  <td className="px-3 py-2">
-                    {variant.offerPrice && variant.offerPrice < variant.price ? (
-                      <div className="flex flex-col">
-                        <span className="text-red-600 font-semibold">
-                          ₹{variant.offerPrice}
-                        </span>
-                        <span className="text-xs text-gray-400 line-through">
-                          ₹{variant.price}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-800 font-medium">
-                        ₹{variant.price}
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Stock */}
-                  <td className="px-3 py-2 text-gray-700">
-                    {variant.stock ?? 0}
-                  </td>
-
-                  {/* Expiry / Best Before */}
-                  <td className="px-3 py-2 text-gray-600 text-xs">
-                    {variant.shelfLife?.expiryDate
-                      ? new Date(variant.shelfLife.expiryDate).toLocaleDateString()
-                      : variant.shelfLife?.bestBefore || "--"}
-                  </td>
-                </tr>
+                  {variant.unitValue}{variant.unitType}
+                </span>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              {product.variants.length > 3 && (
+                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                  +{product.variants.length - 3} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
-      {/* ---------- Footer Actions ---------- */}
-      <div className="flex justify-end space-x-2 mt-4">
-        <button
-          onClick={() => onEdit(product)}
-          className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(product._id)}
-          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
-        >
-          Delete
-        </button>
+        {/* Mobile Actions (visible on mobile, hidden on desktop) */}
+        <div className="flex gap-2 mt-4 md:hidden">
+          <button
+            onClick={() => onEdit(product)}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors text-sm"
+          >
+            <FaEdit />
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(product._id)}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-medium transition-colors text-sm"
+          >
+            <FaTrash />
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );

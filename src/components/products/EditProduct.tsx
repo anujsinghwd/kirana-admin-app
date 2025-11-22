@@ -72,12 +72,12 @@ const EditProductAdmin: React.FC<EditProductAdminProps> = ({
   const [fieldName, setFieldName] = useState<string>("");
 
   // Redux selectors
-//   const allCategory = useSelector(
-//     (state: RootState) => state.product.allCategory
-//   );
-//   const allSubCategory = useSelector(
-//     (state: RootState) => state.product.allSubCategory
-//   );
+  //   const allCategory = useSelector(
+  //     (state: RootState) => state.product.allCategory
+  //   );
+  //   const allSubCategory = useSelector(
+  //     (state: RootState) => state.product.allSubCategory
+  //   );
 
   /** Handle Text and Number Input Changes */
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -96,12 +96,12 @@ const EditProductAdmin: React.FC<EditProductAdminProps> = ({
       const { data: imageResponse } = response;
       const imageUrl = imageResponse.data.url;
 
-    //   setData((prev) => ({
-    //     ...prev,
-    //     image: [...prev.images, ''],
-    //   }));
+      //   setData((prev) => ({
+      //     ...prev,
+      //     image: [...prev.images, ''],
+      //   }));
     } catch (error) {
-    //   AxiosToastError(error);
+      //   AxiosToastError(error);
     } finally {
       setImageLoading(false);
     }
@@ -176,11 +176,11 @@ const EditProductAdmin: React.FC<EditProductAdminProps> = ({
   };
 
   return (
-    <section className="fixed top-0 right-0 left-0 bottom-0 bg-black z-50 bg-opacity-70 p-4">
-      <div className="bg-white w-full p-4 max-w-2xl mx-auto rounded overflow-y-auto h-full max-h-[95vh]">
-        <div className="p-2 bg-white shadow-md flex items-center justify-between">
+    <section className="fixed top-0 right-0 left-0 bottom-0 bg-black z-50 bg-opacity-70 p-0 md:p-4">
+      <div className="bg-white w-full h-full md:h-auto p-4 md:max-w-2xl mx-auto rounded-none md:rounded-lg overflow-y-auto md:max-h-[95vh]">
+        <div className="p-2 bg-white shadow-md flex items-center justify-between sticky top-0 z-10">
           <h2 className="font-semibold">Edit Product</h2>
-          <button onClick={close}>
+          <button onClick={close} className="hover:bg-gray-100 p-1 rounded">
             <IoClose size={20} />
           </button>
         </div>

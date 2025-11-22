@@ -7,7 +7,7 @@ import axios from 'axios';
 // export const baseURL: string = import.meta.env.VITE_API_URL as string;
 
 export const api = axios.create({
-  baseURL: 'https://kirana-admin-services.vercel.app/api',
+  baseURL: 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
