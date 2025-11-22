@@ -36,7 +36,7 @@ interface DeliveryAddress {
 export interface Order {
   _id: string;
   orderId: string;
-  userId: { name: string; mobile: string };
+  user: { name: string; mobile: string };
   order_status: string;
   orderType: string;
   totalAmt: number;

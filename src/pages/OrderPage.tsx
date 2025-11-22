@@ -423,10 +423,10 @@ const AdminOrdersPage: React.FC = () => {
                         <div className="min-w-0">
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Customer</p>
                           <p className="text-sm font-semibold text-gray-900 truncate">
-                            {order.userId?.name || "Guest User"}
+                            {order.user?.name || "Guest User"}
                           </p>
-                          {order.userId?.mobile && (
-                            <p className="text-xs text-gray-600 mt-0.5">{order.userId.mobile}</p>
+                          {order.user?.mobile && (
+                            <p className="text-xs text-gray-600 mt-0.5">{order.user.mobile}</p>
                           )}
                         </div>
                       </div>

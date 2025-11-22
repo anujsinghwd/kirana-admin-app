@@ -232,8 +232,8 @@ const OrderDetailPage: React.FC = () => {
                     <div key={step} className="flex flex-col items-center">
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
-                            ? 'bg-blue-600 text-white shadow-lg'
-                            : 'bg-gray-200 text-gray-400'
+                          ? 'bg-blue-600 text-white shadow-lg'
+                          : 'bg-gray-200 text-gray-400'
                           } ${isCurrent ? 'ring-4 ring-blue-200' : ''}`}
                       >
                         <StepIcon className="text-sm" />
@@ -296,7 +296,7 @@ const OrderDetailPage: React.FC = () => {
                 <div className="text-sm text-gray-500">Contact</div>
                 <div className="font-medium text-gray-900 flex items-center gap-2">
                   <FaPhone className="text-xs text-gray-400" />
-                  {localOrder.delivery_address?.mobile || "N/A"}
+                  {localOrder.customer_name?.mobile || "N/A"}
                 </div>
               </div>
             </div>
