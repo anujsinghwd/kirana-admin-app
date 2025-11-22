@@ -176,24 +176,24 @@ const SubCategoriesPage = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="md:col-span-5 relative">
+          <div className="md:col-span-5 relative h-full">
             <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search subcategories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+              className="w-full h-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
             />
           </div>
 
           {/* Category Filter */}
-          <div className="md:col-span-4 relative">
+          <div className="md:col-span-4 relative h-full">
             <FaFilter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm appearance-none"
+              className="w-full h-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm appearance-none"
             >
               <option value="">All Categories</option>
               {categories.map(c => (

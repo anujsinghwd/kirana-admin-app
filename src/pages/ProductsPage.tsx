@@ -165,14 +165,14 @@ const ProductsPage: React.FC = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="md:col-span-6 relative">
+          <div className="md:col-span-6 relative h-full">
             <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search products by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white shadow-sm"
+              className="w-full h-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white shadow-sm"
             />
             {search && (
               <button

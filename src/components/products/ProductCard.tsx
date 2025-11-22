@@ -58,107 +58,210 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group relative"
+      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group relative border border-gray-100"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Product Image */}
-      <div className="relative h-48 bg-gray-100 overflow-hidden">
-        <img
-          src={productImage}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-        />
+      {/* Mobile Layout - Horizontal */}
+      <div className="flex sm:hidden">
+        {/* Product Image - Left Side */}
+        <div className="relative w-32 h-32 flex-shrink-0 bg-gray-100 overflow-hidden">
+          <img
+            src={productImage}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          />
 
-        {/* Stock Badge */}
-        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${stockStatus.color} backdrop-blur-sm flex items-center gap-1.5`}>
-          <span className={`w-2 h-2 rounded-full ${stockStatus.dotColor} animate-pulse`}></span>
-          {stockStatus.label}
-        </div>
-
-        {/* Offer Badge */}
-        {hasOffer && (
-          <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white backdrop-blur-sm">
-            SALE
+          {/* Stock Badge */}
+          <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold ${stockStatus.color} backdrop-blur-sm flex items-center gap-1`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${stockStatus.dotColor} animate-pulse`}></span>
+            {stockStatus.label}
           </div>
-        )}
 
-        {/* Quick Actions Overlay */}
-        <div
-          className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-3 transition-opacity duration-300 ${showActions ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-        >
-          <button
-            onClick={() => onEdit(product)}
-            className="w-10 h-10 bg-white hover:bg-blue-600 text-blue-600 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg transform hover:scale-110"
-            title="Edit Product"
-          >
-            <FaEdit />
-          </button>
-          <button
-            onClick={() => onDelete(product._id)}
-            className="w-10 h-10 bg-white hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg transform hover:scale-110"
-            title="Delete Product"
-          >
-            <FaTrash />
-          </button>
-        </div>
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4">
-        {/* Category Badge */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
-            <FaBox className="text-xs" />
-            {categoryName}
-          </span>
-          {product.variants && product.variants.length > 1 && (
-            <span className="text-xs text-gray-500">
-              {product.variants.length} variants
-            </span>
+          {/* Offer Badge */}
+          {hasOffer && (
+            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white backdrop-blur-sm">
+              SALE
+            </div>
           )}
         </div>
 
-        {/* Product Name */}
-        <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2 min-h-[2.5rem]">
-          {product.name}
-        </h3>
+        {/* Product Info - Right Side (Mobile) */}
+        <div className="flex-1 p-3 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded-md text-[10px] font-medium">
+              <FaBox className="text-[10px]" />
+              {categoryName}
+            </span>
+            {product.variants && product.variants.length > 1 && (
+              <span className="text-[10px] text-gray-500">
+                {product.variants.length} variants
+              </span>
+            )}
+          </div>
 
-        {/* Description */}
-        {product.description && (
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3 min-h-[2.5rem]">
-            {product.description}
-          </p>
-        )}
+          <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">
+            {product.name}
+          </h3>
 
-        {/* Price and Stock */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-          <div>
-            {displayPrice !== undefined && (
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-green-600">
-                  ₹{displayPrice}
-                </span>
-                {originalPrice && (
-                  <span className="text-sm text-gray-400 line-through">
-                    ₹{originalPrice}
+          {product.description && (
+            <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+              {product.description}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between mt-2">
+            <div>
+              {displayPrice !== undefined && (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-lg font-bold text-green-600">
+                    ₹{displayPrice}
                   </span>
+                  {originalPrice && (
+                    <span className="text-xs text-gray-400 line-through">
+                      ₹{originalPrice}
+                    </span>
+                  )}
+                </div>
+              )}
+              {unitDisplay && (
+                <p className="text-xs text-gray-500">
+                  {unitDisplay}
+                </p>
+              )}
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-semibold text-gray-700">
+                Stock: {totalStock}
+              </p>
+            </div>
+          </div>
+
+          {/* Mobile Actions */}
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => onEdit(product)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors text-xs"
+            >
+              <FaEdit className="text-xs" />
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete(product._id)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-medium transition-colors text-xs"
+            >
+              <FaTrash className="text-xs" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout - Grid */}
+      <div className="hidden sm:grid sm:grid-cols-[112px_1fr] sm:gap-3 p-3">
+        {/* Left Column: Image + Price Below */}
+        <div className="space-y-2">
+          {/* Product Image */}
+          <div className="relative w-28 h-28 bg-gray-100 overflow-hidden rounded-lg">
+            <img
+              src={productImage}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            />
+
+            {/* Stock Badge */}
+            <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${stockStatus.color} backdrop-blur-sm flex items-center gap-1`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${stockStatus.dotColor} animate-pulse`}></span>
+              {stockStatus.label}
+            </div>
+
+            {/* Offer Badge */}
+            {hasOffer && (
+              <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white backdrop-blur-sm">
+                SALE
+              </div>
+            )}
+
+            {/* Quick Actions Overlay */}
+            <div
+              className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-2 transition-opacity duration-300 ${showActions ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+            >
+              <button
+                onClick={() => onEdit(product)}
+                className="w-7 h-7 bg-white hover:bg-blue-600 text-blue-600 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg transform hover:scale-110"
+                title="Edit Product"
+              >
+                <FaEdit className="text-xs" />
+              </button>
+              <button
+                onClick={() => onDelete(product._id)}
+                className="w-7 h-7 bg-white hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg transform hover:scale-110"
+                title="Delete Product"
+              >
+                <FaTrash className="text-xs" />
+              </button>
+            </div>
+          </div>
+
+          {/* Price & Unit Below Image */}
+          <div className="space-y-0.5">
+            {displayPrice !== undefined && (
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-base font-bold text-green-600">
+                    ₹{displayPrice}
+                  </span>
+                  {originalPrice && (
+                    <span className="text-[10px] text-gray-400 line-through">
+                      ₹{originalPrice}
+                    </span>
+                  )}
+                </div>
+                {unitDisplay && (
+                  <p className="text-[10px] text-gray-500">
+                    {unitDisplay}
+                  </p>
                 )}
               </div>
             )}
-            {unitDisplay && (
-              <p className="text-xs text-gray-500 mt-1">
-                {unitDisplay}
-              </p>
+          </div>
+        </div>
+
+        {/* Right Column: Main Info + Stock + Variants */}
+        <div className="min-w-0 space-y-2">
+          {/* Category Badge and Variants Count */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded-md text-[10px] font-medium">
+              <FaBox className="text-[10px]" />
+              {categoryName}
+            </span>
+            {product.variants && product.variants.length > 1 && (
+              <span className="text-[10px] text-gray-500">
+                {product.variants.length} variants
+              </span>
             )}
           </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold text-gray-700">
+
+          {/* Product Name */}
+          <h3 className="font-bold text-gray-900 text-sm line-clamp-2">
+            {product.name}
+          </h3>
+
+          {/* Description */}
+          {product.description && (
+            <p className="text-xs text-gray-600 line-clamp-2">
+              {product.description}
+            </p>
+          )}
+
+          {/* Stock & Expiry */}
+          <div className="flex items-center gap-3 text-xs">
+            <p className="font-semibold text-gray-700">
               Stock: {totalStock}
             </p>
             {firstVariant?.shelfLife?.expiryDate && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-gray-500">
                 Exp: {new Date(firstVariant.shelfLife.expiryDate).toLocaleDateString("en-IN", {
                   day: "2-digit",
                   month: "short"
@@ -166,46 +269,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </p>
             )}
           </div>
-        </div>
 
-        {/* Variants Preview (if multiple) */}
-        {product.variants && product.variants.length > 1 && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500 mb-2">Available Variants:</p>
+          {/* Variants */}
+          {product.variants && product.variants.length > 1 && (
             <div className="flex flex-wrap gap-1">
               {product.variants.slice(0, 3).map((variant, i) => (
                 <span
                   key={i}
-                  className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                  className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px]"
                 >
                   {variant.unitValue}{variant.unitType}
                 </span>
               ))}
               {product.variants.length > 3 && (
-                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
-                  +{product.variants.length - 3} more
+                <span className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px]">
+                  +{product.variants.length - 3}
                 </span>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Mobile Actions (visible on mobile, hidden on desktop) */}
-        <div className="flex gap-2 mt-4 md:hidden">
-          <button
-            onClick={() => onEdit(product)}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors text-sm"
-          >
-            <FaEdit />
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete(product._id)}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-medium transition-colors text-sm"
-          >
-            <FaTrash />
-            Delete
-          </button>
+          )}
         </div>
       </div>
     </div>
