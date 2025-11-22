@@ -51,8 +51,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
     unitType: "kg",
     pricePerUnit: 0,
     availableQty: 0,
-    minQtyAllowed: 100,
-    stepQty: 50,
+    minQtyAllowed: 1,
+    stepQty: 1,
   });
 
   const [variants, setVariants] = useState<IProductVariant[]>([]);
@@ -92,8 +92,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           unitType: "kg",
           pricePerUnit: 0,
           availableQty: 0,
-          minQtyAllowed: 100,
-          stepQty: 50,
+          minQtyAllowed: 1,
+          stepQty: 1,
         }
       );
 
@@ -419,9 +419,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     type="number"
                     min="0"
                     step="0.01"
-                    value={looseConfig.pricePerUnit}
+                    value={looseConfig.pricePerUnit || ''}
                     onChange={(e) =>
-                      setLooseConfig({ ...looseConfig, pricePerUnit: Number(e.target.value) })
+                      setLooseConfig({ ...looseConfig, pricePerUnit: e.target.value === '' ? 0 : Number(e.target.value) })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="₹ per unit"
@@ -435,9 +435,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   <input
                     type="number"
                     min="0"
-                    value={looseConfig.availableQty}
+                    value={looseConfig.availableQty || ''}
                     onChange={(e) =>
-                      setLooseConfig({ ...looseConfig, availableQty: Number(e.target.value) })
+                      setLooseConfig({ ...looseConfig, availableQty: e.target.value === '' ? 0 : Number(e.target.value) })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Total stock"
@@ -451,9 +451,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   <input
                     type="number"
                     min="0"
-                    value={looseConfig.minQtyAllowed}
+                    value={looseConfig.minQtyAllowed || ''}
                     onChange={(e) =>
-                      setLooseConfig({ ...looseConfig, minQtyAllowed: Number(e.target.value) })
+                      setLooseConfig({ ...looseConfig, minQtyAllowed: e.target.value === '' ? 0 : Number(e.target.value) })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -467,9 +467,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   <input
                     type="number"
                     min="0"
-                    value={looseConfig.stepQty}
+                    value={looseConfig.stepQty || ''}
                     onChange={(e) =>
-                      setLooseConfig({ ...looseConfig, stepQty: Number(e.target.value) })
+                      setLooseConfig({ ...looseConfig, stepQty: e.target.value === '' ? 0 : Number(e.target.value) })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
