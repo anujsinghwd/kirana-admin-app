@@ -14,6 +14,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import type { IProductVariant } from "../../context/ProductContext";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 /** ---------- Types ---------- */
 interface Category {
@@ -64,6 +65,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [variantModalOpen, setVariantModalOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<IProductVariant | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Lock body scroll when component is mounted
+  useLockBodyScroll(true);
 
   /** ✅ Load initial data */
   useEffect(() => {

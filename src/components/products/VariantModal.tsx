@@ -9,6 +9,7 @@ import {
   FaBarcode,
   FaInfoCircle,
 } from "react-icons/fa";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 interface VariantModalProps {
   open: boolean;
@@ -39,6 +40,9 @@ const VariantModal: React.FC<VariantModalProps> = ({
       bestBefore: "",
     },
   });
+
+  // Lock body scroll
+  useLockBodyScroll(open);
 
   useEffect(() => {
     if (initialData) setVariant(initialData);

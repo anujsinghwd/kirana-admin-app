@@ -5,6 +5,7 @@ import { MdDelete } from "react-icons/md";
 import { useCategories } from '../context/CategoryContext'
 import NoData from '../components/common/NoData'
 import Loading from '../components/common/Loading'
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll'
 
 const CategoriesPage = () => {
   const { loadingConfig, categories, fetchCategories, createCategory, updateCategory, deleteCategory, deleteCategoryImage } = useCategories()
@@ -15,6 +16,9 @@ const CategoriesPage = () => {
   const [image, setImage] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Lock body scroll when modal is open
+  useLockBodyScroll(showForm);
 
   useEffect(() => {
     fetchCategories().catch(console.error)

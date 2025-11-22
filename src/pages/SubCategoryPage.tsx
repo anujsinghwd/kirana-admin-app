@@ -5,6 +5,7 @@ import { useSubCategories } from "../context/SubCategoryContext";
 import { useCategories } from "../context/CategoryContext";
 import NoData from "../components/common/NoData";
 import Loading from "../components/common/Loading";
+import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 
 const SubCategoriesPage = () => {
   const {
@@ -28,6 +29,9 @@ const SubCategoriesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
+
+  // Lock body scroll when modal is open
+  useLockBodyScroll(showForm);
 
   useEffect(() => {
     fetchSubCategories().catch(console.error);
